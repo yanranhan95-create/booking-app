@@ -1,0 +1,263 @@
+:root {
+  color-scheme: light;
+  --background: #f4efe4;
+  --surface: rgba(255, 250, 242, 0.82);
+  --foreground: #1b1e1c;
+  --muted: #5f625e;
+  --accent: #0e7a6d;
+  --accent-dark: #0c5f55;
+  --border: rgba(27, 30, 28, 0.1);
+  --danger: #a83f2d;
+  --success: #156f58;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  background-image:
+    radial-gradient(circle at top left, rgba(247, 184, 91, 0.2), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(14, 122, 109, 0.16), transparent 28%),
+    linear-gradient(180deg, #fbf6ec 0%, #f4efe4 100%);
+  color: var(--foreground);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.page-shell {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 40px 0 56px;
+}
+
+.admin-toolbar-shell {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 0;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  margin: 0 0 12px;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(2.3rem, 7vw, 4.9rem);
+  line-height: 0.95;
+  max-width: 9ch;
+}
+
+p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 20px;
+  align-items: end;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  margin-bottom: 28px;
+}
+
+.hero-copy {
+  font-size: 1.05rem;
+  max-width: 38ch;
+}
+
+.notice {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.notice.success {
+  color: var(--success);
+}
+
+.notice.error {
+  color: var(--danger);
+}
+
+.layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.single-layout {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+}
+
+.auth-shell {
+  display: grid;
+  justify-content: center;
+}
+
+.auth-panel {
+  width: min(100%, 420px);
+}
+
+.panel {
+  display: grid;
+  gap: 20px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 18px 40px rgba(69, 55, 21, 0.08);
+}
+
+.panel-header,
+.panel-section {
+  display: grid;
+  gap: 14px;
+}
+
+.panel-header {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.slot-list,
+.booking-list,
+.stack-form {
+  display: grid;
+  gap: 12px;
+}
+
+.slot-card,
+.booking-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.slot-card {
+  cursor: pointer;
+}
+
+.slot-card input {
+  margin: 0;
+}
+
+.slot-card.selected {
+  border-color: rgba(14, 122, 109, 0.5);
+  background: rgba(224, 245, 241, 0.85);
+}
+
+.slot-meta,
+.booking-meta,
+.muted-text {
+  font-size: 0.95rem;
+}
+
+.stack-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.stack-form span {
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid rgba(27, 30, 28, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--foreground);
+}
+
+button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fffbf6;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-dark);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.ghost-button,
+.secondary-button {
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.ghost-button:hover,
+.secondary-button:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.admin-form {
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .layout,
+  .single-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .page-shell {
+    width: min(100% - 24px, 720px);
+    padding: 24px 0 40px;
+  }
+
+  .panel-header {
+    grid-template-columns: 1fr;
+  }
+}
