@@ -11,76 +11,97 @@ function isValidDateRange(startsAt: string, endsAt: string) {
 }
 
 export async function GET() {
-  return NextResponse.json({ slots: listSlots() });
+  try {
+    return NextResponse.json({ slots: listSlots() });
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to load slots right now." },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(request: Request) {
-  const authenticated = await isAdminAuthenticated();
+  try {
+    const authenticated = await isAdminAuthenticated();
 
-  if (!authenticated) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+    if (!authenticated) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
 
-  const body = (await request.json()) as {
-    startsAt?: string;
-    endsAt?: string;
-  };
+    const body = (await request.json()) as {
+      startsAt?: string;
+      endsAt?: string;
+    };
 
-  if (!body.startsAt || !body.endsAt) {
+    if (!body.startsAt || !body.endsAt) {
+      return NextResponse.json(
+        { error: "Start time and end time are required." },
+        { status: 400 },
+      );
+    }
+
+    const startsAt = toIsoFromLocalDateTime(body.startsAt);
+    const endsAt = toIsoFromLocalDateTime(body.endsAt);
+
+    if (!isValidDateRange(startsAt, endsAt)) {
+      return NextResponse.json(
+        { error: "End time must be after the start time." },
+        { status: 400 },
+      );
+    }
+
+    const slot = createSlot(startsAt, endsAt);
+
+    return NextResponse.json({ slot }, { status: 201 });
+  } catch {
     return NextResponse.json(
-      { error: "Start time and end time are required." },
-      { status: 400 },
+      { error: "Unable to create slot right now." },
+      { status: 500 },
     );
   }
-
-  const startsAt = toIsoFromLocalDateTime(body.startsAt);
-  const endsAt = toIsoFromLocalDateTime(body.endsAt);
-
-  if (!isValidDateRange(startsAt, endsAt)) {
-    return NextResponse.json(
-      { error: "End time must be after the start time." },
-      { status: 400 },
-    );
-  }
-
-  const slot = createSlot(startsAt, endsAt);
-
-  return NextResponse.json({ slot }, { status: 201 });
 }
 
 export async function DELETE(request: Request) {
-  const authenticated = await isAdminAuthenticated();
+  try {
+    const authenticated = await isAdminAuthenticated();
 
-  if (!authenticated) {
-    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
-  }
+    if (!authenticated) {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+    }
 
-  const url = new URL(request.url);
-  const action = url.searchParams.get("action");
+    const url = new URL(request.url);
+    const action = url.searchParams.get("action");
 
-  if (action === "cleanup") {
-    const deletedCount = deletePastSlots();
-    return NextResponse.json({ deletedCount });
-  }
+    if (action === "cleanup") {
+      const deletedCount = deletePastSlots();
+      return NextResponse.json({ deletedCount });
+    }
 
-  const slotId = Number(url.searchParams.get("slotId"));
+    const slotId = Number(url.searchParams.get("slotId"));
 
-  if (!slotId) {
-    return NextResponse.json({ error: "Invalid slot id." }, { status: 400 });
-  }
+    if (!slotId) {
+      return NextResponse.json({ error: "Invalid slot id." }, { status: 400 });
+    }
 
-  const result = deleteSlot(slotId);
+    const result = deleteSlot(slotId);
 
-  if (result.status === "not_found") {
-    return NextResponse.json({ error: "That slot was not found." }, { status: 404 });
-  }
+    if (result.status === "not_found") {
+      return NextResponse.json({ error: "That slot was not found." }, { status: 404 });
+    }
 
-  if (result.status === "has_booking") {
+    if (result.status === "has_booking") {
+      return NextResponse.json(
+        { error: "This slot already has a booking and cannot be deleted." },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch {
     return NextResponse.json(
-      { error: "This slot already has a booking and cannot be deleted." },
-      { status: 409 },
+      { error: "Unable to update slots right now." },
+      { status: 500 },
     );
   }
-
-  return NextResponse.json({ ok: true });
 }

@@ -18,6 +18,11 @@ type BookingPageProps = {
   mode: "user" | "admin";
 };
 
+type ApiResponse<T> = {
+  data: T | null;
+  error: string | null;
+};
+
 function getNextWeekBounds() {
   const now = new Date();
   const localDay = now.getDay();
@@ -45,6 +50,33 @@ function isInNextWeek(dateValue: string) {
   return date >= nextWeekStart && date < weekAfterNextStart;
 }
 
+async function readApiResponse<T extends Record<string, unknown>>(
+  response: Response,
+  fallbackMessage: string,
+): Promise<ApiResponse<T>> {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  if (!contentType.includes("application/json")) {
+    if (response.ok) {
+      return { data: null, error: fallbackMessage };
+    }
+
+    return { data: null, error: fallbackMessage };
+  }
+
+  try {
+    const data = (await response.json()) as T & { error?: string };
+
+    if (!response.ok) {
+      return { data: null, error: data.error ?? fallbackMessage };
+    }
+
+    return { data, error: null };
+  } catch {
+    return { data: null, error: fallbackMessage };
+  }
+}
+
 export default function BookingPage({ mode }: BookingPageProps) {
   const [slots, setSlots] = useState<SlotWithBooking[]>([]);
   const [selectedSlotId, setSelectedSlotId] = useState<number | null>(null);
@@ -61,10 +93,12 @@ export default function BookingPage({ mode }: BookingPageProps) {
 
     try {
       const response = await fetch("/api/slots", { cache: "no-store" });
-      const data = (await response.json()) as { slots?: SlotWithBooking[]; error?: string };
+      const { data, error: responseError } = await readApiResponse<{
+        slots?: SlotWithBooking[];
+      }>(response, "Unable to load slots.");
 
-      if (!response.ok || !data.slots) {
-        throw new Error(data.error ?? "Unable to load slots.");
+      if (!data?.slots) {
+        throw new Error(responseError ?? "Unable to load slots.");
       }
 
       setSlots(data.slots);
@@ -107,10 +141,13 @@ export default function BookingPage({ mode }: BookingPageProps) {
         },
         body: JSON.stringify(slotForm),
       });
-      const data = (await response.json()) as { error?: string };
+      const { error: responseError } = await readApiResponse<{ slot?: SlotWithBooking }>(
+        response,
+        "Unable to create slot. Please try again.",
+      );
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Unable to create slot.");
+        throw new Error(responseError ?? "Unable to create slot. Please try again.");
       }
 
       setSlotForm({ startsAt: "", endsAt: "" });
@@ -146,10 +183,10 @@ export default function BookingPage({ mode }: BookingPageProps) {
           ...bookingForm,
         }),
       });
-      const data = (await response.json()) as { error?: string };
+      const { error: responseError } = await readApiResponse(response, "Unable to book slot.");
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Unable to book slot.");
+        throw new Error(responseError ?? "Unable to book slot.");
       }
 
       setBookingForm(emptyBookingForm);
@@ -172,10 +209,13 @@ export default function BookingPage({ mode }: BookingPageProps) {
       const response = await fetch(`/api/bookings/${bookingId}`, {
         method: "DELETE",
       });
-      const data = (await response.json()) as { error?: string };
+      const { error: responseError } = await readApiResponse(
+        response,
+        "Unable to cancel booking.",
+      );
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Unable to cancel booking.");
+        throw new Error(responseError ?? "Unable to cancel booking.");
       }
 
       setMessage("Booking cancelled.");
@@ -196,10 +236,13 @@ export default function BookingPage({ mode }: BookingPageProps) {
       const response = await fetch(`/api/slots?slotId=${slotId}`, {
         method: "DELETE",
       });
-      const data = (await response.json()) as { error?: string };
+      const { error: responseError } = await readApiResponse(
+        response,
+        "Unable to delete slot.",
+      );
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Unable to delete slot.");
+        throw new Error(responseError ?? "Unable to delete slot.");
       }
 
       setMessage("Slot deleted.");
@@ -220,13 +263,15 @@ export default function BookingPage({ mode }: BookingPageProps) {
       const response = await fetch("/api/slots?action=cleanup", {
         method: "DELETE",
       });
-      const data = (await response.json()) as { error?: string; deletedCount?: number };
+      const { data, error: responseError } = await readApiResponse<{
+        deletedCount?: number;
+      }>(response, "Unable to delete past slots.");
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Unable to delete past slots.");
+        throw new Error(responseError ?? "Unable to delete past slots.");
       }
 
-      setMessage(`${data.deletedCount ?? 0} past slot(s) deleted.`);
+      setMessage(`${data?.deletedCount ?? 0} past slot(s) deleted.`);
       await loadSlots();
     } catch (cleanupError) {
       setError(
